@@ -4,6 +4,7 @@ export const ENDPOINTS = {
   AUTH: {
     SIGN_IN: `${API_BASE}/auth/sign-in`,
     SIGN_UP: `${API_BASE}/auth/sign-up`,
+    SIGN_OUT: `${API_BASE}/auth/sign-out`,
     REFRESH: `${API_BASE}/auth/refresh`,
   },
   TASKS: `${API_BASE}/tasks`,

@@ -1,6 +1,7 @@
 import React from "react";
 import type {LoginValues, RegisterValues} from "@/validations/auth";
 import {useRouter} from "next/navigation";
+import {ENDPOINTS} from "@/lib/api"
 
 export const useOnSubmit = (
   setStatus: React.Dispatch<React.SetStateAction<{ isSubmitting: boolean; errorMsg: string }>>,
@@ -11,7 +12,7 @@ export const useOnSubmit = (
     try {
       setStatus((prev) => ({...prev, isSubmitting: true, errorMsg: ""}))
 
-      const endpoint = mode === 'login' ? '/api/v1/auth/sign-in' : '/api/v1/auth/sign-up';
+      const endpoint = mode === 'login' ? ENDPOINTS.AUTH.SIGN_IN : ENDPOINTS.AUTH.SIGN_UP;
 
       const response = await fetch(endpoint, {
         method: "POST",
