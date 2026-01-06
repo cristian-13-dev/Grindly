@@ -1,5 +1,5 @@
 import {Zap} from 'lucide-react';
-import LoginForm from './Form'
+import AuthForm from './Form'
 
 export default function App() {
   return (
@@ -11,12 +11,12 @@ export default function App() {
             <div className="flex items-center justify-center w-8 h-8 bg-neutral-900 rounded-md">
               <Zap className="w-4 h-4 text-white fill-white"/>
             </div>
-            <h1 className="text-neutral-900 font-bold text-3xl">Taskify</h1>
+            <h1 className="text-neutral-900 font-bold text-3xl">Unknown</h1>
           </div>
           <p className="text-neutral-600">Level up your productivity</p>
         </div>
 
-        <LoginForm />
+        <AuthForm />
       </div>
     </div>
   );

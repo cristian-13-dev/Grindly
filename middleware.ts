@@ -1,50 +1,48 @@
-import type {NextRequest} from "next/server";
-import {NextResponse} from "next/server";
-import * as jose from 'jose';
+import { NextResponse, type NextRequest } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
-const PUBLIC_PATHS = ["/login", "/sign-up", "/api"];
+const PUBLIC_PATHS = ["/login", "/sign-up"];
 
 export async function middleware(req: NextRequest) {
+  const cookiesToSet: Array<{ name: string; value: string; options: Record<string, unknown> }> = [];
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookies) {
+          cookies.forEach((c) => cookiesToSet.push(c));
+        },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   const path = req.nextUrl.pathname;
-  const token = req.cookies.get("access_token")?.value;
 
-  if (path.startsWith("/login") || path.startsWith("/sign-up")) {
-    if (token) {
-      try {
-        if (process.env.JWT_SECRET) {
-          const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-          await jose.jwtVerify(token, secret);
-        }
-        return NextResponse.redirect(new URL("/", req.url));
-      } catch (err) {
-        if (err instanceof Error) throw new Error(err.message)
-        return NextResponse.next();
-      }
-    }
-    return NextResponse.next();
+  let res: NextResponse;
+
+  if (PUBLIC_PATHS.some((p) => path.startsWith(p))) {
+    res = user ? NextResponse.redirect(new URL("/", req.url)) : NextResponse.next();
+  } else {
+    res = user ? NextResponse.next() : NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (PUBLIC_PATHS.some(p => path.startsWith(p))) {
-    return NextResponse.next();
-  }
+  cookiesToSet.forEach(({ name, value, options }) => {
+    res.cookies.set(name, value, options);
+  });
 
-  if (!token) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  try {
-    if (process.env.JWT_SECRET) {
-      const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-      await jose.jwtVerify(token, secret);
-    }
-    return NextResponse.next();
-  } catch (err) {
-    if (err instanceof Error) throw new Error(err.message)
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
+  return res;
 }
 
-
 export const config = {
-  matcher: ['/((?!_next|api|favicon.ico).*)'],
+  matcher: ["/((?!_next|favicon.ico|api).*)"],
 }
