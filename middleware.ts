@@ -4,7 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 const PUBLIC_PATHS = ["/login", "/sign-up"];
 
 export async function middleware(req: NextRequest) {
-  const cookiesToSet: Array<{ name: string; value: string; options: any }> = [];
+  const cookiesToSet: Array<{ name: string; value: string; options: Record<string, unknown> }> = [];
 
   const rememberMe = req.cookies.get("remember_me")?.value === "1";
 
