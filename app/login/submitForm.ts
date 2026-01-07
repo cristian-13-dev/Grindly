@@ -15,8 +15,10 @@ export const useOnSubmit = (
     try {
       setStatus({ isSubmitting: true, errorMsg: "" });
 
+      // MARK: LOGIN
       if (mode === "login") {
         const rememberMe = (values as LoginValues).rememberMe;
+
         document.cookie = `remember_me=${rememberMe ? "1" : "0"}; Path=/; SameSite=Lax`;
 
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -25,47 +27,50 @@ export const useOnSubmit = (
         });
 
         if (error) throw new Error(error.message);
-        if (!data?.session) throw new Error("No session returned from Supabase.");
+        if (!data?.session) throw new Error("No session returned");
 
         router.replace("/");
         router.refresh();
         return;
       }
 
+      // MARK: SIGN UP
       const v = values as RegisterValues;
 
       if (!v.terms) {
-        throw new Error("You must accept the Terms of Service and Privacy Policy.");
+        throw new Error("You must accept the Terms and Privacy Policy.");
       }
 
-      const TERMS_VERSION = "2026-01-01";
-      const PRIVACY_VERSION = "2026-01-01";
+      const CONSENT_VERSION = "2026-01-01";
 
       const { data, error } = await supabase.auth.signUp({
         email: v.email,
         password: v.password,
         options: {
-          data: { username: v.username },
+          data: {
+            username: v.username,
+          },
         },
       });
 
       if (error) throw new Error(error.message);
 
       const userId = data.user?.id;
-      if (!userId) throw new Error("No user returned from Supabase.");
+      if (!userId) throw new Error("User not returned from Supabase");
 
       const resp = await fetch("/api/consents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: userId,
-          terms_version: TERMS_VERSION,
-          privacy_version: PRIVACY_VERSION,
+          consent_type: "terms_and_privacy",
+          version: CONSENT_VERSION,
+          user_agent: navigator.userAgent,
         }),
       });
 
       const json = await resp.json().catch(() => null);
-      if (!resp.ok) throw new Error(json?.error || "Failed to save consents");
+      if (!resp.ok) throw new Error(json?.error || "Failed to save consent");
 
       if (!data.session) {
         router.replace("/login");
