@@ -3,10 +3,10 @@ import type { LoginValues, RegisterValues } from "@/validations/auth";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
+type Status = { isSubmitting: boolean; errorMsg: string };
+
 export const useOnSubmit = (
-  setStatus: React.Dispatch<
-    React.SetStateAction<{ isSubmitting: boolean; errorMsg: string }>
-  >,
+  setStatus: React.Dispatch<React.SetStateAction<Status>>,
   mode: "login" | "signup"
 ) => {
   const router = useRouter();
@@ -15,28 +15,59 @@ export const useOnSubmit = (
     try {
       setStatus({ isSubmitting: true, errorMsg: "" });
 
-      const { data, error } =
-        mode === "login"
-          ? await supabase.auth.signInWithPassword({
-              email: values.email,
-              password: values.password,
-            })
-          : await supabase.auth.signUp({
-              email: values.email,
-              password: values.password,
-              options: {
-                data: {
-                  username: (values as RegisterValues).username,
-                },
-              },
-            });
+      if (mode === "login") {
+        const rememberMe = (values as LoginValues).rememberMe;
+        document.cookie = `remember_me=${rememberMe ? "1" : "0"}; Path=/; SameSite=Lax`;
 
-      if (error) {
-        throw new Error(error.message);
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: values.email,
+          password: values.password,
+        });
+
+        if (error) throw new Error(error.message);
+        if (!data?.session) throw new Error("No session returned from Supabase.");
+
+        router.replace("/");
+        router.refresh();
+        return;
       }
 
-      const session = data?.session;
-      if (!session && mode === "signup") {
+      const v = values as RegisterValues;
+
+      if (!v.terms) {
+        throw new Error("You must accept the Terms of Service and Privacy Policy.");
+      }
+
+      const TERMS_VERSION = "2026-01-01";
+      const PRIVACY_VERSION = "2026-01-01";
+
+      const { data, error } = await supabase.auth.signUp({
+        email: v.email,
+        password: v.password,
+        options: {
+          data: { username: v.username },
+        },
+      });
+
+      if (error) throw new Error(error.message);
+
+      const userId = data.user?.id;
+      if (!userId) throw new Error("No user returned from Supabase.");
+
+      const resp = await fetch("/api/consents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          terms_version: TERMS_VERSION,
+          privacy_version: PRIVACY_VERSION,
+        }),
+      });
+
+      const json = await resp.json().catch(() => null);
+      if (!resp.ok) throw new Error(json?.error || "Failed to save consents");
+
+      if (!data.session) {
         router.replace("/login");
         router.refresh();
         return;
@@ -49,7 +80,6 @@ export const useOnSubmit = (
         isSubmitting: false,
         errorMsg: err instanceof Error ? err.message : String(err),
       });
-      return;
     } finally {
       setStatus((prev) => ({ ...prev, isSubmitting: false }));
     }

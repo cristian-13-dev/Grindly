@@ -4,7 +4,9 @@ import { createServerClient } from "@supabase/ssr";
 const PUBLIC_PATHS = ["/login", "/sign-up"];
 
 export async function middleware(req: NextRequest) {
-  const cookiesToSet: Array<{ name: string; value: string; options: Record<string, unknown> }> = [];
+  const cookiesToSet: Array<{ name: string; value: string; options: any }> = [];
+
+  const rememberMe = req.cookies.get("remember_me")?.value === "1";
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,13 +33,24 @@ export async function middleware(req: NextRequest) {
   let res: NextResponse;
 
   if (PUBLIC_PATHS.some((p) => path.startsWith(p))) {
-    res = user ? NextResponse.redirect(new URL("/", req.url)) : NextResponse.next();
+    res = user
+      ? NextResponse.redirect(new URL("/", req.url))
+      : NextResponse.next();
   } else {
-    res = user ? NextResponse.next() : NextResponse.redirect(new URL("/login", req.url));
+    res = user
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL("/login", req.url));
   }
 
   cookiesToSet.forEach(({ name, value, options }) => {
-    res.cookies.set(name, value, options);
+    const opts = { ...options } as Record<string, unknown>;
+
+    if (!rememberMe) {
+      delete opts.maxAge;
+      delete opts.expires;
+    }
+
+    res.cookies.set(name, value, opts);
   });
 
   return res;
@@ -45,4 +58,4 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: ["/((?!_next|favicon.ico|api).*)"],
-}
+};
