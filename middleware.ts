@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
-const PUBLIC_PATHS = ["/login", "/sign-up"];
+const PUBLIC_PATHS = ["/login", "/sign-up", "/forgot-password", "/reset-password", "/terms", "/privacy"];
 
 export async function middleware(req: NextRequest) {
   const cookiesToSet: Array<{ name: string; value: string; options: Record<string, unknown> }> = [];

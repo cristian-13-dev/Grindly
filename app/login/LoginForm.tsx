@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TriangleAlert } from "lucide-react";
+import Link from "next/link";
 
 import {
   Form,
@@ -60,7 +61,12 @@ export default function LoginForm() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              <div className="flex justify-between items-center">
+                <FormLabel>Password</FormLabel>
+                <Link href="/forgot-password" className="text-xs text-neutral-600 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
               <FormControl>
                 <Input
                   type="password"

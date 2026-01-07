@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TriangleAlert } from "lucide-react";
+import Link from "next/link";
 
 import {
   Form,
@@ -125,10 +126,16 @@ export default function SignupForm() {
                   onCheckedChange={(v) => field.onChange(v === true)}
                 />
               </FormControl>
-              <FormLabel className="font-normal">
-                I agree to the Terms of Service and Privacy Policy
-              </FormLabel>
-              <FormMessage />
+              <div className="flex flex-col gap-1">
+                <FormLabel className="font-normal">
+                  <p>
+                    I agree to the{" "}
+                    <Link href="/terms" className="underline cursor-pointer">Terms of Service</Link> and{" "}
+                    <Link href="/privacy" className="underline cursor-pointer">Privacy Policy</Link>
+                  </p>
+                </FormLabel>
+                <FormMessage />
+              </div>
             </FormItem>
           )}
         />

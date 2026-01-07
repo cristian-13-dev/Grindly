@@ -28,7 +28,7 @@ export default function AuthForm() {
               <button
                 type="button"
                 onClick={() => setMode("signup")}
-                className="text-neutral-900 font-medium hover:text-neutral-700"
+                className="text-neutral-900 cursor-pointer font-medium hover:text-neutral-600"
               >
                 Sign up
               </button>
@@ -39,7 +39,7 @@ export default function AuthForm() {
               <button
                 type="button"
                 onClick={() => setMode("login")}
-                className="text-neutral-900 font-medium hover:text-neutral-700"
+                className="text-neutral-900 cursor-pointer font-medium hover:text-neutral-600"
               >
                 Sign in
               </button>
