@@ -41,15 +41,14 @@ export default function ForgotPasswordPreview() {
     try {
       const origin = window.location.origin;
 
-      const redirectTo = `${origin}/api/auth/callback?next=/reset-password`;
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? origin;
 
       const { error } = await supabase.auth.resetPasswordForEmail(
         values.email,
         {
-          redirectTo,
+          redirectTo: `${appUrl}/api/auth/callback?next=/reset-password`,
         }
       );
-
       toast.dismiss(loadingId);
 
       if (error) {
