@@ -39,9 +39,7 @@ export default function ForgotPasswordPreview() {
     const loadingId = toast.loading("Sending reset link...");
 
     try {
-      const origin = window.location.origin;
-
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? origin;
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
       const { error } = await supabase.auth.resetPasswordForEmail(
         values.email,
