@@ -2,6 +2,8 @@
 
 import Script from "next/script";
 import { useEffect } from "react";
+import { Toaster } from "react-hot-toast";
+
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -13,6 +15,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+      <Toaster position="bottom-right" />
+
       <Script
         src="https://accounts.google.com/gsi/client?hl=en"
         strategy="afterInteractive"
