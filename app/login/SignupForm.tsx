@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TriangleAlert } from "lucide-react";
-import Link from "next/link";
 
 import {
   Form,
@@ -14,7 +13,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Button, Checkbox, Input, Spinner } from "@/components/ui";
+import { Button, Input, Spinner } from "@/components/ui";
 
 import { registerSchema, type RegisterValues } from "@/validations/auth";
 import { useOnSubmit } from "./submitForm";

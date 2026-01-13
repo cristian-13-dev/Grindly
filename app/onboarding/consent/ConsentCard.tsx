@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { createTermsConsent, CONSENT_VERSION } from "@/lib/consents";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -12,26 +13,42 @@ export default function ConsentCard() {
   const router = useRouter();
   const [checked, setChecked] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string>("");
 
   const onContinue = async () => {
-    if (!checked) return;
+    if (!checked || loading) return;
 
     setLoading(true);
+    setErrorMsg("");
+
     try {
-      const { error } = await supabase.auth.updateUser({
+      const {
+        data: { user },
+        error: userErr,
+      } = await supabase.auth.getUser();
+
+      if (userErr) throw new Error(userErr.message);
+      if (!user) throw new Error("Not authenticated");
+
+      await createTermsConsent({
+        user_id: user.id,
+        user_agent: navigator.userAgent,
+      });
+
+      const { error: updateErr } = await supabase.auth.updateUser({
         data: {
           tosAccepted: true,
           tosAcceptedAt: new Date().toISOString(),
-          tosVersion: "2024-01",
+          tosVersion: CONSENT_VERSION,
         },
       });
 
-      if (error) {
-        console.error(error);
-        return;
-      }
+      if (updateErr) throw new Error(updateErr.message);
 
       router.replace("/");
+      router.refresh();
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : String(e));
     } finally {
       setLoading(false);
     }
@@ -66,11 +83,9 @@ export default function ConsentCard() {
           </span>
         </label>
 
-        <Button
-          className="w-full"
-          disabled={!checked || loading}
-          onClick={onContinue}
-        >
+        {errorMsg ? <p className="text-sm text-red-600">{errorMsg}</p> : null}
+
+        <Button className="w-full" disabled={!checked || loading} onClick={onContinue}>
           {loading ? "Saving..." : "Continue"}
         </Button>
       </CardContent>
