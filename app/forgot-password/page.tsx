@@ -29,7 +29,7 @@ import { forgotPasswordSchema } from "@/validations/forgot-password";
 
 export default function ForgetPasswordPreview() {
   const router = useRouter();
-  
+
   const form = useForm<z.infer<typeof forgotPasswordSchema>>({
     resolver: zodResolver(forgotPasswordSchema),
     defaultValues: {
@@ -40,10 +40,10 @@ export default function ForgetPasswordPreview() {
   async function onSubmit(values: z.infer<typeof forgotPasswordSchema>) {
     try {
       await supabase.auth.resetPasswordForEmail(values.email, {
-        redirectTo: `${window.location.origin}/api/auth/callback?next=/reset-password`,
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      router.replace("/reset-password");
+      router.replace("/login");
       router.refresh();
 
       toast.success("Password reset email sent. Please check your inbox.");

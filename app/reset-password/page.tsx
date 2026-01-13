@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -40,23 +41,53 @@ export default function ResetPasswordPreview() {
     },
   });
 
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const { error } = await supabase.auth.getSession();
+      if (cancelled) return;
+
+      if (error) {
+        console.error("[Supabase] getSession error:", error);
+        toast.error("Something went wrong. Please try again.");
+        router.replace("/forgot-password");
+        return;
+      }
+
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    const loadingToastId = toast.loading("Updating your password...");
+
     try {
+      const { error: sessionErr } = await supabase.auth.getSession();
+      if (sessionErr) throw new Error(sessionErr.message);
+      
       const { error } = await supabase.auth.updateUser({
         password: values.password,
       });
+
       if (error) throw new Error(error.message);
 
-      toast.success("Password reset successful.");
-      router.replace("/login");
-      router.refresh();
+      await supabase.auth.signOut();
 
-      toast.success(
-        "Password reset successful. You can now log in with your new password."
-      );
-    } catch (error) {
-      console.error("Error resetting password", error);
-      toast.error("Failed to reset the password. Please try again.");
+      toast.dismiss(loadingToastId);
+      toast.success("Password updated. You can now sign in with your new password.");
+
+      setTimeout(() => {
+        router.replace("/login");
+        router.refresh();
+      }, 900);
+    } catch (e) {
+      toast.dismiss(loadingToastId);
+      console.error("Error resetting password", e);
+      toast.error(e instanceof Error ? e.message : "Failed to update password. Please try again.");
     }
   }
 
@@ -64,26 +95,24 @@ export default function ResetPasswordPreview() {
     <div className="flex min-h-[40vh] w-full h-screen items-center justify-center px-4 py-8 sm:min-h-[60vh] sm:px-6 lg:min-h-[70vh] lg:px-8">
       <Card className="w-full max-w-md sm:max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
-          <CardDescription>
-            Enter your new password to reset your password.
-          </CardDescription>
+          <CardTitle className="text-2xl">Reset password</CardTitle>
+          <CardDescription>Choose a new password for your account.</CardDescription>
         </CardHeader>
+
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               <div className="grid gap-4">
-                {/* New Password Field */}
                 <FormField
                   control={form.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem className="grid gap-2">
-                      <FormLabel htmlFor="password">New Password</FormLabel>
+                      <FormLabel htmlFor="password">New password</FormLabel>
                       <FormControl>
                         <Input
                           id="password"
-                          placeholder="******"
+                          placeholder="••••••••"
                           type="password"
                           autoComplete="new-password"
                           {...field}
@@ -94,19 +123,16 @@ export default function ResetPasswordPreview() {
                   )}
                 />
 
-                {/* Confirm Password Field */}
                 <FormField
                   control={form.control}
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem className="grid gap-2">
-                      <FormLabel htmlFor="confirmPassword">
-                        Confirm Password
-                      </FormLabel>
+                      <FormLabel htmlFor="confirmPassword">Confirm new password</FormLabel>
                       <FormControl>
                         <Input
                           id="confirmPassword"
-                          placeholder="******"
+                          placeholder="••••••••"
                           type="password"
                           autoComplete="new-password"
                           {...field}
@@ -117,8 +143,8 @@ export default function ResetPasswordPreview() {
                   )}
                 />
 
-                <Button type="submit" className="w-full">
-                  Reset Password
+                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? "Updating..." : "Update password"}
                 </Button>
               </div>
             </form>
