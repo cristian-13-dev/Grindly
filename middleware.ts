@@ -8,11 +8,14 @@ const PUBLIC_PATHS = [
   "/reset-password",
   "/terms",
   "/privacy",
+  "/api/auth/callback",
 ];
 
-const ONBOARDING_PATHS = [
-  "/onboarding/consent",
-];
+const ONBOARDING_PATHS = ["/onboarding/consent"];
+
+type UserMetadata = {
+  tosAccepted?: boolean;
+};
 
 export async function middleware(req: NextRequest) {
   const cookiesToSet: Array<{
@@ -46,25 +49,29 @@ export async function middleware(req: NextRequest) {
 
   const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
   const isOnboarding = ONBOARDING_PATHS.some((p) => path.startsWith(p));
+  const isResetPassword = path.startsWith("/reset-password");
 
-  const tosAccepted = Boolean(
-    (user)?.user_metadata?.tosAccepted
-  );
+  const metadata: UserMetadata | null =
+    user && typeof user.user_metadata === "object"
+      ? (user.user_metadata as UserMetadata)
+      : null;
+
+  const tosAccepted = Boolean(metadata?.tosAccepted);
 
   let res: NextResponse;
 
   if (!user) {
-    res = isPublic
-      ? NextResponse.next()
-      : NextResponse.redirect(new URL("/login", req.url));
+    res = isPublic ? NextResponse.next() : NextResponse.redirect(new URL("/login", req.url));
   } else if (!tosAccepted) {
-    res = isOnboarding || isPublic
-      ? NextResponse.next()
-      : NextResponse.redirect(new URL("/onboarding/consent", req.url));
+    res =
+      isOnboarding || isPublic
+        ? NextResponse.next()
+        : NextResponse.redirect(new URL("/onboarding/consent", req.url));
   } else {
-    res = isPublic || isOnboarding
-      ? NextResponse.redirect(new URL("/", req.url))
-      : NextResponse.next();
+    res =
+      (isPublic || isOnboarding) && !isResetPassword
+        ? NextResponse.redirect(new URL("/", req.url))
+        : NextResponse.next();
   }
 
   cookiesToSet.forEach(({ name, value, options }) => {

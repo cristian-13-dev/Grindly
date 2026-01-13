@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
-import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabaseClient";
 
 import {
   Form,
@@ -30,8 +30,9 @@ import { resetPasswordSchema } from "@/validations/reset-password";
 
 const formSchema = resetPasswordSchema;
 
-export default function ResetPasswordPreview() {
+export default function ResetPasswordPage() {
   const router = useRouter();
+  const [ready, setReady] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -45,7 +46,7 @@ export default function ResetPasswordPreview() {
     let cancelled = false;
 
     (async () => {
-      const { error } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
       if (cancelled) return;
 
       if (error) {
@@ -55,6 +56,15 @@ export default function ResetPasswordPreview() {
         return;
       }
 
+      if (!data.session) {
+        toast.error(
+          "This reset link is invalid or has expired. Please request a new one."
+        );
+        router.replace("/forgot-password");
+        return;
+      }
+
+      setReady(true);
     })();
 
     return () => {
@@ -66,9 +76,18 @@ export default function ResetPasswordPreview() {
     const loadingToastId = toast.loading("Updating your password...");
 
     try {
-      const { error: sessionErr } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionErr } =
+        await supabase.auth.getSession();
       if (sessionErr) throw new Error(sessionErr.message);
-      
+      if (!sessionData.session) {
+        toast.dismiss(loadingToastId);
+        toast.error(
+          "This reset link is invalid or has expired. Please request a new one."
+        );
+        router.replace("/forgot-password");
+        return;
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: values.password,
       });
@@ -81,13 +100,16 @@ export default function ResetPasswordPreview() {
       toast.success("Password updated. You can now sign in with your new password.");
 
       setTimeout(() => {
-        router.replace("/login");
-        router.refresh();
-      }, 900);
+        window.location.assign("/login");
+      }, 700);
     } catch (e) {
       toast.dismiss(loadingToastId);
       console.error("Error resetting password", e);
-      toast.error(e instanceof Error ? e.message : "Failed to update password. Please try again.");
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : "Failed to update password. Please try again."
+      );
     }
   }
 
@@ -116,6 +138,7 @@ export default function ResetPasswordPreview() {
                           type="password"
                           autoComplete="new-password"
                           {...field}
+                          disabled={!ready}
                         />
                       </FormControl>
                       <FormMessage />
@@ -128,7 +151,9 @@ export default function ResetPasswordPreview() {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem className="grid gap-2">
-                      <FormLabel htmlFor="confirmPassword">Confirm new password</FormLabel>
+                      <FormLabel htmlFor="confirmPassword">
+                        Confirm new password
+                      </FormLabel>
                       <FormControl>
                         <Input
                           id="confirmPassword"
@@ -136,6 +161,7 @@ export default function ResetPasswordPreview() {
                           type="password"
                           autoComplete="new-password"
                           {...field}
+                          disabled={!ready}
                         />
                       </FormControl>
                       <FormMessage />
@@ -143,7 +169,11 @@ export default function ResetPasswordPreview() {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={!ready || form.formState.isSubmitting}
+                >
                   {form.formState.isSubmitting ? "Updating..." : "Update password"}
                 </Button>
               </div>
