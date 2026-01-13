@@ -18,7 +18,7 @@ export default function AuthForm() {
         <SignupForm />
       )}
 
-      <SocialAuth />
+      <SocialAuth mode={mode} />
 
       <div className="mt-6 text-center">
         <p className="text-neutral-500 text-sm">

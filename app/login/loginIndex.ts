@@ -1,4 +1,4 @@
 import handleGithubLogin from './handleGitHubLogin'
-import handleGoogleLogin from './handleGoogleLogin'
+import GoogleLoginButton from './handleGoogleLogin'
 
-export {handleGithubLogin, handleGoogleLogin}
+export {handleGithubLogin, GoogleLoginButton}

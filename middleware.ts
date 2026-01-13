@@ -10,6 +10,10 @@ const PUBLIC_PATHS = [
   "/privacy",
 ];
 
+const ONBOARDING_PATHS = [
+  "/onboarding/consent",
+];
+
 export async function middleware(req: NextRequest) {
   const cookiesToSet: Array<{
     name: string;
@@ -40,16 +44,27 @@ export async function middleware(req: NextRequest) {
 
   const path = req.nextUrl.pathname;
 
+  const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
+  const isOnboarding = ONBOARDING_PATHS.some((p) => path.startsWith(p));
+
+  const tosAccepted = Boolean(
+    (user)?.user_metadata?.tosAccepted
+  );
+
   let res: NextResponse;
 
-  if (PUBLIC_PATHS.some((p) => path.startsWith(p))) {
-    res = user
-      ? NextResponse.redirect(new URL("/", req.url))
-      : NextResponse.next();
-  } else {
-    res = user
+  if (!user) {
+    res = isPublic
       ? NextResponse.next()
       : NextResponse.redirect(new URL("/login", req.url));
+  } else if (!tosAccepted) {
+    res = isOnboarding || isPublic
+      ? NextResponse.next()
+      : NextResponse.redirect(new URL("/onboarding/consent", req.url));
+  } else {
+    res = isPublic || isOnboarding
+      ? NextResponse.redirect(new URL("/", req.url))
+      : NextResponse.next();
   }
 
   cookiesToSet.forEach(({ name, value, options }) => {

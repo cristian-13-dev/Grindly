@@ -115,31 +115,6 @@ export default function SignupForm() {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="terms"
-          render={({ field }) => (
-            <FormItem className="flex items-center space-x-2">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={(v) => field.onChange(v === true)}
-                />
-              </FormControl>
-              <div className="flex flex-col gap-1">
-                <FormLabel className="font-normal">
-                  <p>
-                    I agree to the{" "}
-                    <Link href="/terms" className="underline cursor-pointer">Terms of Service</Link> and{" "}
-                    <Link href="/privacy" className="underline cursor-pointer">Privacy Policy</Link>
-                  </p>
-                </FormLabel>
-                <FormMessage />
-              </div>
-            </FormItem>
-          )}
-        />
-
         {status.errorMsg && (
           <p className="text-red-500 flex items-center gap-1 text-xs">
             <TriangleAlert className="w-4 h-4" /> {status.errorMsg}
