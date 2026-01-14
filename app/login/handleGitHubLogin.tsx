@@ -44,10 +44,8 @@ export default function GithubButton() {
         style={{ width }}
         className="relative h-10 cursor-pointer rounded border border-gray-300 bg-white px-4 text-[14px] text-gray-900 hover:bg-gray-50 disabled:opacity-60"
       >
-        {/* Icon */}
         <Github className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-700" />
 
-        {/* Label — matches Google baseline */}
         <span className="block text-center ml-6 leading-9.5">
           {loading ? "Redirecting..." : "Sign in with GitHub"}
         </span>

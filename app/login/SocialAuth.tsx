@@ -1,18 +1,17 @@
-import { FieldSeparator } from "@/components/ui/field";
 import { GithubButton } from "@/app/login/loginIndex";
 import GoogleGISButton from "./GoogleGISButton";
+import { FieldSeparator } from "@/components/ui/field";
 
-export default function SocialAuth({ mode }: { mode: "login" | "signup" }) {
+export default function SocialAuth() {
   return (
-    <>
-      <FieldSeparator className="my-6">
-        {mode === "login" ? "Or sign in with" : "Or sign up with"}
-      </FieldSeparator>
-
-      <div className="space-y-3 mb-6">
+    <div className="space-y-5 mb-4 w-full *:w-full">
+      <div className="space-y-3">
         <GoogleGISButton />
         <GithubButton />
       </div>
-    </>
+      <FieldSeparator className="my-0 *:data-[slot=field-separator-content]:bg-card">
+        Or continue with
+      </FieldSeparator>
+    </div>
   );
 }
