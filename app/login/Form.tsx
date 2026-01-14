@@ -11,7 +11,7 @@ export default function AuthForm() {
   const [mode, setMode] = useState<Mode>("login");
 
   return (
-    <div className="bg-white border border-neutral-300 p-8 rounded-lg">
+    <div className="bg-white border border-neutral-300 p-8 rounded">
       {mode === "login" ? (
         <LoginForm />
       ) : (
