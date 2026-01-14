@@ -2,7 +2,7 @@
 
 import Script from "next/script";
 import { useEffect } from "react";
-import { Toaster } from "react-hot-toast";
+import { Toaster } from "@/components/ui/sonner";
 
 
 export function Providers({ children }: { children: React.ReactNode }) {
@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      <Toaster position="bottom-right" />
+      <Toaster />
 
       <Script
         src="https://accounts.google.com/gsi/client?hl=en"

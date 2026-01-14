@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { toast } from "react-hot-toast";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -73,14 +73,16 @@ export default function ResetPasswordPage() {
   }, [router]);
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const loadingToastId = toast.loading("Updating your password...");
+    const loadingId = toast.loading("Updating your password...");
 
     try {
       const { data: sessionData, error: sessionErr } =
         await supabase.auth.getSession();
+
       if (sessionErr) throw new Error(sessionErr.message);
+
       if (!sessionData.session) {
-        toast.dismiss(loadingToastId);
+        toast.dismiss(loadingId);
         toast.error(
           "This reset link is invalid or has expired. Please request a new one."
         );
@@ -96,15 +98,19 @@ export default function ResetPasswordPage() {
 
       await supabase.auth.signOut();
 
-      toast.dismiss(loadingToastId);
-      toast.success("Password updated. You can now sign in with your new password.");
+      toast.dismiss(loadingId);
+      toast.success(
+        "Password updated. You can now sign in with your new password."
+      );
 
+      // Navigate after a short delay so the user sees the success toast
       setTimeout(() => {
         window.location.assign("/login");
       }, 700);
     } catch (e) {
-      toast.dismiss(loadingToastId);
+      toast.dismiss(loadingId);
       console.error("Error resetting password", e);
+
       toast.error(
         e instanceof Error
           ? e.message
@@ -118,7 +124,9 @@ export default function ResetPasswordPage() {
       <Card className="w-full max-w-md sm:max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl">Reset password</CardTitle>
-          <CardDescription>Choose a new password for your account.</CardDescription>
+          <CardDescription>
+            Choose a new password for your account.
+          </CardDescription>
         </CardHeader>
 
         <CardContent>
@@ -174,7 +182,9 @@ export default function ResetPasswordPage() {
                   className="w-full"
                   disabled={!ready || form.formState.isSubmitting}
                 >
-                  {form.formState.isSubmitting ? "Updating..." : "Update password"}
+                  {form.formState.isSubmitting
+                    ? "Updating..."
+                    : "Update password"}
                 </Button>
               </div>
             </form>
